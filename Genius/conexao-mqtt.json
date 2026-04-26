@@ -1,0 +1,219 @@
+[
+    {
+        "id": "9c0332ec8fcd40fa",
+        "type": "tab",
+        "label": "Fluxo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2f5c24e83f1cd9a7",
+        "type": "function",
+        "z": "9c0332ec8fcd40fa",
+        "name": "function 1",
+        "func": "// 1. Recupera o ranking atual da memória\nlet ranking = global.get(\"ranking_acumulado\") || [];\n\n// 2. Se a mensagem veio do \"UI Event\" (carregamento da página)\n// ou se o Inject de limpeza foi acionado (limpar)\nif (msg.ui_event === \"connect\" || msg.topic === \"limpar\") {\n    if (msg.topic === \"limpar\") {\n        ranking = [];\n        global.set(\"ranking_acumulado\", []);\n    }\n    msg.payload = ranking;\n    return msg;\n}\n\n// 3. Processamento normal de novos pontos do Arduino (Wokwi)\nlet entrada;\ntry {\n    entrada = (typeof msg.payload === 'object') ? msg.payload : JSON.parse(msg.payload);\n} catch (e) { return null; }\n\nif (entrada && entrada.tag) {\n    ranking.push({\n        \"tag\": String(entrada.tag),\n        \"score\": parseInt(entrada.score)\n    });\n\n    ranking.sort((a, b) => b.score - a.score);\n    ranking = ranking.slice(0, 10); // <--- DEVE SER 10 AQUI\n    global.set(\"ranking_acumulado\", ranking);\n\n    msg.payload = ranking;\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 200,
+        "wires": [
+            [
+                "6948b4facc4e9c19",
+                "ec703bb989d1c4d0"
+            ]
+        ]
+    },
+    {
+        "id": "2af27ed8e2ab1c4c",
+        "type": "mqtt in",
+        "z": "9c0332ec8fcd40fa",
+        "name": "",
+        "topic": "disruptive/genius/rank",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "72b4a75ccb62511b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 200,
+        "wires": [
+            [
+                "2f5c24e83f1cd9a7",
+                "0fbe2d7e91f1fa38"
+            ]
+        ]
+    },
+    {
+        "id": "6948b4facc4e9c19",
+        "type": "ui_template",
+        "z": "9c0332ec8fcd40fa",
+        "group": "a7b3c5dd4292e4fa",
+        "name": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "format": "<style>\n    .ranking-box {\n        font-family: 'Segoe UI', sans-serif;\n        background-color: #ffffff;\n        border-radius: 8px;\n        border: 1px solid #ddd;\n        /* Garante que a tabela tenha espaço para os 10 itens */\n        min-height: 450px;\n        overflow-y: auto;\n    }\n\n    .ranking-table {\n        width: 100%;\n        border-collapse: collapse;\n    }\n\n    .ranking-table th {\n        background-color: #f8f9fa;\n        padding: 12px;\n        text-align: left;\n        position: sticky;\n        /* Mantém o cabeçalho no topo ao rolar */\n        top: 0;\n        border-bottom: 2px solid #dee2e6;\n    }\n\n    .ranking-table td {\n        padding: 10px 12px;\n        border-bottom: 1px solid #eee;\n    }\n\n    .ranking-row:nth-child(even) {\n        background-color: #fafafa;\n    }\n\n    .pos-col {\n        width: 40px;\n        font-weight: bold;\n        color: #666;\n    }\n\n    .score-col {\n        text-align: right;\n        font-weight: bold;\n        color: #1b5e20;\n    }\n</style>\n\n<div class=\"ranking-box\">\n    <table class=\"ranking-table\">\n        <thead>\n            <tr>\n                <th class=\"pos-col\">#</th>\n                <th>Jogador</th>\n                <th style=\"text-align: right;\">Pontos</th>\n            </tr>\n        </thead>\n        <tbody>\n            <tr class=\"ranking-row\" ng-repeat=\"item in msg.payload track by $index\">\n                <td class=\"pos-col\">{{$index + 1}}º</td>\n                <td style=\"text-transform: uppercase;\">{{item.tag}}</td>\n                <td class=\"score-col\">{{item.score}} pts</td>\n            </tr>\n        </tbody>\n    </table>\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 520,
+        "y": 200,
+        "wires": [
+            [
+                "c3f1df01530aca3a"
+            ]
+        ]
+    },
+    {
+        "id": "0fbe2d7e91f1fa38",
+        "type": "debug",
+        "z": "9c0332ec8fcd40fa",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "ec703bb989d1c4d0",
+        "type": "debug",
+        "z": "9c0332ec8fcd40fa",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "c3f1df01530aca3a",
+        "type": "debug",
+        "z": "9c0332ec8fcd40fa",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "817ec84b53c6ad58",
+        "type": "ui-event",
+        "z": "9c0332ec8fcd40fa",
+        "ui": "d784827d29b8b6a8",
+        "name": "",
+        "x": 200,
+        "y": 120,
+        "wires": [
+            [
+                "2f5c24e83f1cd9a7"
+            ]
+        ]
+    },
+    {
+        "id": "72b4a75ccb62511b",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "disruptive/genius/rank",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "a7b3c5dd4292e4fa",
+        "type": "ui_group",
+        "name": "Ranking",
+        "tab": "dd87aaf16b384e76",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "d784827d29b8b6a8",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "dd87aaf16b384e76",
+        "type": "ui_tab",
+        "name": "Ranking",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "06654f57c5bbea74",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6",
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
